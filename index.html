@@ -8,6 +8,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="旅遊記帳">
+  <link rel="apple-touch-icon" href="https://i.ibb.co/ymkR6Tpk/Gemini-Generated-Image-tj8q2itj8q2itj8q.jpg">
+  <link rel="icon" type="image/jpeg" href="https://i.ibb.co/ymkR6Tpk/Gemini-Generated-Image-tj8q2itj8q2itj8q.jpg">
 
   <!-- Tailwind CSS 與 React -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -27,73 +29,7 @@
   <script type="text/babel">
     const { useState, useEffect, useMemo } = React;
 
-    // 將布丁狗旅行插圖轉為高畫質向量/內嵌畫布，免除任何圖片路徑失效問題
-    const PompompurinIcon = ({ className = "w-12 h-12" }) => (
-      <svg className={`${className} rounded-2xl shadow-sm border border-amber-200 overflow-hidden shrink-0`} viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* 背景 */}
-        <rect width="200" height="200" rx="42" fill="#FFFBEB"/>
-        <rect x="2" y="2" width="196" height="196" rx="40" stroke="#FDE68A" strokeWidth="4"/>
-        
-        {/* 左上地球儀 */}
-        <circle cx="48" cy="46" r="24" fill="#86EFAC" stroke="#15803D" strokeWidth="4.5"/>
-        <path d="M38 34C48 38 52 30 58 42C62 50 54 58 44 60" stroke="#38BDF8" strokeWidth="5.5" strokeLinecap="round"/>
-        <circle cx="40" cy="54" r="3" fill="#38BDF8"/>
-        
-        {/* 右上飛機與軌跡 */}
-        <path d="M118 42C126 38 134 36 142 36" stroke="#FBBF24" strokeWidth="3.5" strokeDasharray="4 4" strokeLinecap="round"/>
-        <path d="M140 38L166 28L174 42L148 46Z" fill="#F0F9FF" stroke="#0369A1" strokeWidth="4" strokeLinejoin="round"/>
-        <circle cx="156" cy="36" r="2.5" fill="#0284C7"/>
-        <circle cx="163" cy="34" r="2.5" fill="#0284C7"/>
-
-        {/* 左側金幣堆 */}
-        <g>
-          <ellipse cx="42" cy="156" rx="16" ry="8" fill="#FACC15" stroke="#713F12" strokeWidth="4"/>
-          <ellipse cx="42" cy="148" rx="16" ry="8" fill="#FDE047" stroke="#713F12" strokeWidth="4"/>
-          <ellipse cx="42" cy="140" rx="16" ry="8" fill="#FEF08A" stroke="#713F12" strokeWidth="4"/>
-          <path d="M42 136V144M38 140H46" stroke="#713F12" strokeWidth="3" strokeLinecap="round"/>
-        </g>
-
-        {/* 右側粉紅行李箱 */}
-        <g>
-          <path d="M152 118V108H164V118" stroke="#475569" strokeWidth="4" strokeLinecap="round"/>
-          <rect x="142" y="118" width="34" height="48" rx="8" fill="#F472B6" stroke="#713F12" strokeWidth="4.5"/>
-          <circle cx="159" cy="140" r="5" fill="#FFFFFF"/>
-          <circle cx="153" cy="133" r="2.5" fill="#FFFFFF"/>
-          <circle cx="159" cy="131" r="2.5" fill="#FFFFFF"/>
-          <circle cx="165" cy="133" r="2.5" fill="#FFFFFF"/>
-          <circle cx="148" cy="167" r="3.5" fill="#334155"/>
-          <circle cx="170" cy="167" r="3.5" fill="#334155"/>
-        </g>
-
-        {/* 布丁狗本體 */}
-        {/* 耳朵 */}
-        <ellipse cx="62" cy="88" rx="18" ry="30" fill="#FDE047" stroke="#713F12" strokeWidth="6" transform="rotate(-25 62 88)"/>
-        <ellipse cx="138" cy="88" rx="18" ry="30" fill="#FDE047" stroke="#713F12" strokeWidth="6" transform="rotate(25 138 88)"/>
-        {/* 身體與臉 */}
-        <ellipse cx="100" cy="128" rx="42" ry="38" fill="#FEF08A" stroke="#713F12" strokeWidth="6"/>
-        <circle cx="100" cy="104" r="48" fill="#FEF08A" stroke="#713F12" strokeWidth="6"/>
-        {/* 雙腳 */}
-        <ellipse cx="76" cy="164" rx="12" ry="9" fill="#FEF08A" stroke="#713F12" strokeWidth="5"/>
-        <ellipse cx="124" cy="164" rx="12" ry="9" fill="#FEF08A" stroke="#713F12" strokeWidth="5"/>
-        {/* 棕色貝雷帽 */}
-        <ellipse cx="100" cy="58" rx="30" ry="15" fill="#78350F" stroke="#451A03" strokeWidth="4.5"/>
-        <path d="M100 44V50" stroke="#78350F" strokeWidth="5" strokeLinecap="round"/>
-        {/* 臉部五官 */}
-        <ellipse cx="78" cy="98" rx="4.5" ry="5.5" fill="#713F12"/>
-        <ellipse cx="122" cy="98" rx="4.5" ry="5.5" fill="#713F12"/>
-        <ellipse cx="100" cy="107" rx="7" ry="5" fill="#713F12"/>
-        <path d="M92 113C96 117 100 117 100 113C100 117 104 117 108 113" stroke="#713F12" strokeWidth="4.5" strokeLinecap="round"/>
-
-        {/* 雙手抱著的旅行地圖 */}
-        <g>
-          <path d="M70 128L98 116L126 128L100 142Z" fill="#BAE6FD" stroke="#0284C7" strokeWidth="4.5" strokeLinejoin="round"/>
-          <circle cx="98" cy="128" r="4.5" fill="#EF4444"/>
-          {/* 小狗手手 */}
-          <ellipse cx="68" cy="132" rx="7" ry="9" fill="#FEF08A" stroke="#713F12" strokeWidth="4.5"/>
-          <ellipse cx="130" cy="132" rx="7" ry="9" fill="#FEF08A" stroke="#713F12" strokeWidth="4.5"/>
-        </g>
-      </svg>
-    );
+    const APP_ICON_URL = "https://i.ibb.co/ymkR6Tpk/Gemini-Generated-Image-tj8q2itj8q2itj8q.jpg";
 
     const DBS_CARDS = [
       { id: 'dbs-eco', name: '星展 eco 永續卡 (日韓歐美 5%)', rate: 5.0, fee: 1.5 },
@@ -115,7 +51,7 @@
     function App() {
       const [trips, setTrips] = useState(() => {
         try {
-          const saved = localStorage.getItem('TRAVEL_APP_TRIPS_V4');
+          const saved = localStorage.getItem('TRAVEL_APP_TRIPS_V6');
           return saved ? JSON.parse(saved) : DEFAULT_TRIPS;
         } catch (e) {
           return DEFAULT_TRIPS;
@@ -129,7 +65,7 @@
       const currentTrip = trips.find(t => t.id === activeTripId) || trips[0];
 
       useEffect(() => {
-        localStorage.setItem('TRAVEL_APP_TRIPS_V4', JSON.stringify(trips));
+        localStorage.setItem('TRAVEL_APP_TRIPS_V6', JSON.stringify(trips));
       }, [trips]);
 
       const [formData, setFormData] = useState({
@@ -266,10 +202,14 @@
 
       return (
         <div className="max-w-3xl mx-auto px-4 py-6">
-          {/* 頂部導航列 */}
+          {/* 頂部導航列：使用網址載入布丁狗原圖 */}
           <div className="bg-white/95 p-4 rounded-3xl border border-sky-100 shadow-sm flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
-              <PompompurinIcon className="w-12 h-12" />
+              <img 
+                src={APP_ICON_URL} 
+                alt="布丁狗 Logo" 
+                className="w-12 h-12 rounded-2xl object-cover shadow-sm border border-amber-200"
+              />
               <div>
                 <h1 className="text-xl font-bold text-slate-900 tracking-tight">旅遊記帳</h1>
                 <p className="text-xs text-sky-600 font-medium">星展信用卡回饋 • 預付機酒歸戶</p>
