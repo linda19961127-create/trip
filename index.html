@@ -11,736 +11,575 @@
   <link rel="apple-touch-icon" href="https://i.ibb.co/ymkR6Tpk/Gemini-Generated-Image-tj8q2itj8q2itj8q.jpg">
   <link rel="icon" type="image/jpeg" href="https://i.ibb.co/ymkR6Tpk/Gemini-Generated-Image-tj8q2itj8q2itj8q.jpg">
 
-  <!-- Tailwind CSS 與 React -->
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
     .scrollbar-none::-webkit-scrollbar { display: none; }
     .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+    .swipe-item { transition: transform 0.15s ease-out; }
   </style>
 </head>
 <body class="bg-gradient-to-b from-sky-50 via-blue-50/40 to-slate-50 text-slate-800 min-h-screen">
-  <div id="root"></div>
 
-  <script type="text/babel">
-    const { useState, useEffect, useMemo, useRef } = React;
+  <div class="max-w-3xl mx-auto px-4 py-6">
+    <!-- 頂部導航列 -->
+    <div class="bg-white/95 p-4 rounded-3xl border border-sky-100 shadow-sm flex items-center justify-between mb-4">
+      <div class="flex items-center space-x-3">
+        <img 
+          src="https://i.ibb.co/ymkR6Tpk/Gemini-Generated-Image-tj8q2itj8q2itj8q.jpg" 
+          alt="布丁狗 Logo" 
+          class="w-12 h-12 rounded-2xl object-cover shadow-sm border border-amber-200"
+        />
+        <div>
+          <h1 class="text-xl font-bold text-slate-900 tracking-tight">旅遊記帳</h1>
+          <p class="text-xs text-sky-600 font-medium">星展信用卡回饋 • 預付機酒歸戶</p>
+        </div>
+      </div>
 
-    const APP_ICON_URL = "https://i.ibb.co/ymkR6Tpk/Gemini-Generated-Image-tj8q2itj8q2itj8q.jpg";
+      <div class="flex items-center space-x-2">
+        <button id="btnOpenCatalog" class="px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-2xl text-xs font-semibold transition">
+          ☰ 目錄
+        </button>
+        <button id="btnOpenNewTrip" class="px-3.5 py-2 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-2xl text-xs font-semibold transition">
+          ＋ 新旅程
+        </button>
+      </div>
+    </div>
 
-    const DEFAULT_PAY_METHODS = [
+    <!-- 橫向切換旅程列 -->
+    <div class="flex items-center space-x-2 overflow-x-auto scrollbar-none pb-2 mb-3">
+      <span class="text-xs text-slate-400 font-medium whitespace-nowrap pl-1">切換旅程：</span>
+      <div id="tripTabsContainer" class="flex items-center space-x-2"></div>
+    </div>
+
+    <!-- 切換旅程下一行：【＋ 記一筆】大按鈕 -->
+    <div class="mb-6">
+      <button id="btnOpenAddExpense" class="w-full py-3 bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 hover:from-sky-600 text-white rounded-2xl text-sm font-semibold shadow-md shadow-sky-200/60 transition flex items-center justify-center space-x-2 active:scale-[0.99]">
+        <span class="text-base leading-none">＋</span>
+        <span id="btnExpenseLabel">為當前旅程記一筆消費</span>
+      </button>
+    </div>
+
+    <!-- 總結指標卡 -->
+    <div class="grid grid-cols-3 gap-3 mb-6">
+      <div class="bg-white p-4 rounded-2xl border border-sky-100 shadow-xs">
+        <div class="text-xs text-slate-400 font-medium">旅程總支出</div>
+        <div class="text-xl font-bold text-slate-800 mt-1"><span id="statTotal">0</span> <span class="text-xs font-normal text-slate-400">TWD</span></div>
+      </div>
+      <div class="bg-white p-4 rounded-2xl border border-sky-100 shadow-xs">
+        <div class="text-xs text-blue-600 font-medium">提前預購 (機酒)</div>
+        <div class="text-xl font-bold text-blue-900 mt-1"><span id="statPre">0</span> <span class="text-xs font-normal text-slate-400">TWD</span></div>
+      </div>
+      <div class="bg-white p-4 rounded-2xl border border-emerald-100 shadow-xs">
+        <div class="text-xs text-emerald-600 font-medium">星展回饋淨賺</div>
+        <div class="text-xl font-bold text-emerald-700 mt-1"><span id="statRewards">+0</span> <span class="text-xs font-normal text-slate-400">TWD</span></div>
+      </div>
+    </div>
+
+    <!-- 消費明細列表 -->
+    <div class="bg-white rounded-3xl border border-sky-100 p-5 shadow-xs">
+      <div class="flex justify-between items-center mb-3">
+        <div>
+          <h2 id="currentTripHeading" class="text-sm font-bold text-slate-800">消費明細</h2>
+          <span class="text-[11px] text-slate-400">（左滑項目可刪除）</span>
+        </div>
+        <span id="currentRateLabel" class="text-xs text-slate-400">匯率：0.22</span>
+      </div>
+
+      <div id="expenseList" class="rounded-2xl overflow-hidden border border-sky-100 divide-y divide-sky-50"></div>
+    </div>
+  </div>
+
+  <!-- 彈窗 1：記一筆 / 編輯消費 -->
+  <div id="modalExpense" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-sky-100 text-xs">
+      <div class="flex justify-between items-center pb-3 border-b border-sky-100">
+        <h3 id="modalExpenseTitle" class="font-bold text-base text-slate-900">記一筆消費</h3>
+        <button onclick="closeModal('modalExpense')" class="text-slate-400 text-sm">✕</button>
+      </div>
+
+      <form id="formExpense" class="mt-4 space-y-3">
+        <input type="hidden" id="expEditingId" value="">
+        <div>
+          <label class="block text-slate-600 mb-1 font-semibold">品項名稱</label>
+          <input type="text" id="expTitle" required placeholder="例：酷航機票、新宿飯店" class="w-full bg-slate-50 border border-sky-100 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:border-sky-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-slate-600 mb-1 font-semibold">階段</label>
+            <select id="expStage" class="w-full bg-slate-50 border border-sky-100 rounded-xl px-2 py-2">
+              <option value="pre">行前預付</option>
+              <option value="local">當地開銷</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-slate-600 mb-1 font-semibold">類別</label>
+            <select id="expCategory" class="w-full bg-slate-50 border border-sky-100 rounded-xl px-2 py-2">
+              <option value="機票">機票</option>
+              <option value="住宿">住宿</option>
+              <option value="食">食</option>
+              <option value="交通">交通</option>
+              <option value="娛樂">娛樂</option>
+              <option value="衣服">衣服</option>
+              <option value="其他">其他</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-slate-600 mb-1 font-semibold">幣別</label>
+            <select id="expCurrency" class="w-full bg-slate-50 border border-sky-100 rounded-xl px-2 py-2"></select>
+          </div>
+          <div>
+            <label class="block text-slate-600 mb-1 font-semibold">金額</label>
+            <input type="number" step="any" id="expAmount" required placeholder="0" class="w-full bg-slate-50 border border-sky-100 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:border-sky-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-slate-600 mb-1 font-semibold">日期</label>
+          <input type="date" id="expDate" required class="w-full bg-slate-50 border border-sky-100 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:border-sky-500">
+        </div>
+
+        <div>
+          <label class="block text-slate-600 mb-1 font-semibold">支付方式</label>
+          <select id="expPayMethod" class="w-full bg-slate-50 border border-sky-100 rounded-xl px-2 py-2 text-slate-800 font-medium"></select>
+        </div>
+
+        <div class="pt-3 flex justify-end space-x-2">
+          <button type="button" onclick="closeModal('modalExpense')" class="px-4 py-2 text-slate-400 font-medium">取消</button>
+          <button type="submit" class="px-5 py-2 bg-gradient-to-r from-sky-500 to-blue-600 text-white rounded-xl font-semibold shadow-sm">儲存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 彈窗 2：規劃新旅程 -->
+  <div id="modalNewTrip" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-sky-100 text-xs">
+      <div class="flex justify-between items-center pb-3 border-b border-sky-100">
+        <h3 class="font-bold text-base text-slate-900">規劃新旅程</h3>
+        <button onclick="closeModal('modalNewTrip')" class="text-slate-400 text-sm">✕</button>
+      </div>
+
+      <form id="formNewTrip" class="mt-4 space-y-3">
+        <div>
+          <label class="block text-slate-600 mb-1 font-semibold">旅程名稱</label>
+          <input type="text" id="newTripName" required placeholder="例：2026/12 泰國曼谷" class="w-full bg-slate-50 border border-sky-100 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:border-sky-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-slate-600 mb-1 font-semibold">外幣代碼</label>
+            <input type="text" id="newTripCurrency" required placeholder="THB, JPY, EUR..." class="w-full bg-slate-50 border border-sky-100 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:border-sky-500">
+          </div>
+          <div>
+            <label class="block text-slate-600 mb-1 font-semibold">預估匯率</label>
+            <input type="number" step="0.0001" id="newTripRate" required placeholder="0.95" class="w-full bg-slate-50 border border-sky-100 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:border-sky-500">
+          </div>
+        </div>
+
+        <div class="pt-3 flex justify-end space-x-2">
+          <button type="button" onclick="closeModal('modalNewTrip')" class="px-4 py-2 text-slate-400">取消</button>
+          <button type="submit" class="px-5 py-2 bg-gradient-to-r from-sky-500 to-blue-600 text-white rounded-xl font-semibold">建立</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 彈窗 3：新增支付方式 -->
+  <div id="modalNewPay" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-sky-100 text-xs">
+      <div class="flex justify-between items-center pb-3 border-b border-sky-100">
+        <h3 class="font-bold text-base text-slate-900">新增支付方式</h3>
+        <button onclick="closeModal('modalNewPay')" class="text-slate-400 text-sm">✕</button>
+      </div>
+
+      <form id="formNewPay" class="mt-4 space-y-3">
+        <div>
+          <label class="block text-slate-600 mb-1 font-semibold">支付方式名稱</label>
+          <input type="text" id="newPayName" required placeholder="例：LINE Pay、街口、玉山卡" class="w-full bg-slate-50 border border-sky-100 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:border-sky-500">
+        </div>
+
+        <div class="flex items-center space-x-2 pt-1">
+          <input type="checkbox" id="newPayIsCard" class="rounded border-sky-200 text-sky-600">
+          <label for="newPayIsCard" class="text-slate-700 font-medium cursor-pointer">此為信用卡（需計算手續費與回饋）</label>
+        </div>
+
+        <div id="cardFields" class="grid grid-cols-2 gap-2 pt-1 hidden">
+          <div>
+            <label class="block text-slate-600 mb-1 font-semibold">海外回饋率 (%)</label>
+            <input type="number" step="0.1" id="newPayRate" placeholder="3.0" value="0" class="w-full bg-slate-50 border border-sky-100 rounded-xl px-3 py-2">
+          </div>
+          <div>
+            <label class="block text-slate-600 mb-1 font-semibold">海外手續費 (%)</label>
+            <input type="number" step="0.1" id="newPayFee" placeholder="1.5" value="0" class="w-full bg-slate-50 border border-sky-100 rounded-xl px-3 py-2">
+          </div>
+        </div>
+
+        <div class="pt-3 flex justify-end space-x-2">
+          <button type="button" onclick="closeModal('modalNewPay')" class="px-4 py-2 text-slate-400">取消</button>
+          <button type="submit" class="px-5 py-2 bg-gradient-to-r from-sky-500 to-blue-600 text-white rounded-xl font-semibold">儲存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 彈窗 4：旅程目錄 -->
+  <div id="modalCatalog" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-sky-100 text-xs max-h-[85vh] flex flex-col">
+      <div class="flex justify-between items-center pb-3 border-b border-sky-100">
+        <div>
+          <h3 class="font-bold text-base text-slate-900">旅程總目錄</h3>
+          <p class="text-[11px] text-slate-400">點擊任一旅程卡片即可切換並查看紀錄</p>
+        </div>
+        <button onclick="closeModal('modalCatalog')" class="text-slate-400 text-sm">✕</button>
+      </div>
+
+      <div id="catalogList" class="mt-4 space-y-3 overflow-y-auto flex-1 pr-1"></div>
+
+      <div class="pt-4 border-t border-sky-100 flex justify-between items-center">
+        <button id="btnCatalogCreate" class="text-sky-600 hover:text-sky-700 font-semibold text-xs">
+          ＋ 規劃全新旅程
+        </button>
+        <button onclick="closeModal('modalCatalog')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-medium">
+          關閉
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- 核心資料狀態 ---
+    const DEFAULT_PAY = [
       { id: 'dbs-eco', name: '星展 eco 永續卡', rate: 5.0, fee: 1.5, isCard: true },
       { id: 'cash', name: '現金', rate: 0, fee: 0, isCard: false }
     ];
 
-    const DEFAULT_TRIPS = [
-      {
-        id: 'trip-1',
-        name: '2026/11 日本東京',
-        currency: 'JPY',
-        rate: 0.22,
-        expenses: []
-      },
-      {
-        id: 'trip-2',
-        name: '2026/12 泰國曼谷',
-        currency: 'THB',
-        rate: 0.95,
-        expenses: []
-      }
+    const DEFAULT_DATA = [
+      { id: 'trip-1', name: '2026/11 日本東京', currency: 'JPY', rate: 0.22, expenses: [] },
+      { id: 'trip-2', name: '2026/12 泰國曼谷', currency: 'THB', rate: 0.95, expenses: [] }
     ];
 
-    // 單筆消費元件：支援手機/電腦左右滑動露出刪除按鈕
-    function ExpenseItem({ ex, toTWD, onEdit, onDelete }) {
-      const [offsetX, setOffsetX] = useState(0);
-      const [isOpen, setIsOpen] = useState(false);
-      const startXRef = useRef(0);
-      const isDraggingRef = useRef(false);
+    let trips = JSON.parse(localStorage.getItem('TB_TRIPS_NATIVE') || 'null') || DEFAULT_DATA;
+    let payMethods = JSON.parse(localStorage.getItem('TB_PAY_NATIVE') || 'null') || DEFAULT_PAY;
+    let activeTripId = trips[0] ? trips[0].id : '';
 
-      const handleTouchStart = (e) => {
-        startXRef.current = e.touches[0].clientX;
-        isDraggingRef.current = true;
-      };
-
-      const handleTouchMove = (e) => {
-        if (!isDraggingRef.current) return;
-        const currentX = e.touches[0].clientX;
-        const diff = currentX - startXRef.current;
-        if (isOpen) {
-          if (diff > 0 && diff <= 80) setOffsetX(-80 + diff);
-        } else {
-          if (diff < 0 && diff >= -90) setOffsetX(diff);
-        }
-      };
-
-      const handleTouchEnd = () => {
-        isDraggingRef.current = false;
-        if (offsetX < -40) {
-          setOffsetX(-76);
-          setIsOpen(true);
-        } else {
-          setOffsetX(0);
-          setIsOpen(false);
-        }
-      };
-
-      return (
-        <div className="relative overflow-hidden border-b border-sky-50 last:border-b-0 bg-rose-500">
-          <div className="absolute inset-y-0 right-0 w-20 flex items-center justify-center">
-            <button
-              onClick={() => {
-                setOffsetX(0);
-                setIsOpen(false);
-                onDelete(ex.id, ex.title);
-              }}
-              className="w-full h-full bg-rose-600 hover:bg-rose-700 text-white font-medium text-xs flex items-center justify-center transition"
-            >
-              刪除
-            </button>
-          </div>
-
-          <div
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-            style={{ transform: `translateX(${offsetX}px)` }}
-            className="p-4 bg-white transition-transform duration-150 ease-out flex items-center justify-between select-none"
-          >
-            <div className="pr-2">
-              <div className="font-semibold text-slate-800 text-sm">{ex.title}</div>
-              <div className="text-xs text-slate-400 mt-0.5">
-                {ex.date} • {ex.category} • {ex.stage === 'pre' ? '行前預購' : '當地支出'} • {ex.payMethodName || '星展 eco 永續卡'}
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-3 shrink-0">
-              <div className="text-right">
-                <div className="font-bold text-slate-900 text-sm">${toTWD(ex).toLocaleString()} TWD</div>
-                {ex.currency !== 'TWD' && (
-                  <div className="text-xs text-slate-400">{ex.currency} {ex.origAmount}</div>
-                )}
-              </div>
-
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEdit(ex);
-                }}
-                className="text-xs text-slate-400 hover:text-slate-600 px-2 py-1 rounded-lg hover:bg-slate-50 transition font-normal"
-              >
-                編輯
-              </button>
-            </div>
-          </div>
-        </div>
-      );
+    function saveState() {
+      localStorage.setItem('TB_TRIPS_NATIVE', JSON.stringify(trips));
+      localStorage.setItem('TB_PAY_NATIVE', JSON.stringify(payMethods));
+      render();
     }
 
-    function App() {
-      const [trips, setTrips] = useState(() => {
-        try {
-          const saved = localStorage.getItem('TRAVEL_APP_TRIPS_V9');
-          return saved ? JSON.parse(saved) : DEFAULT_TRIPS;
-        } catch (e) {
-          return DEFAULT_TRIPS;
+    function getCurrentTrip() {
+      return trips.find(t => t.id === activeTripId) || trips[0];
+    }
+
+    function toTWD(exp, trip) {
+      if (!exp) return 0;
+      if (exp.currency === 'TWD') return Number(exp.amount || 0);
+      return Math.round(Number(exp.amount || 0) * (trip.rate || 0.22));
+    }
+
+    // --- 彈窗開關控制 ---
+    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+    // --- 畫面渲染 ---
+    function render() {
+      const trip = getCurrentTrip();
+      if (!trip) return;
+
+      // 1. 旅程標題與切換
+      document.getElementById('currentTripHeading').innerText = `【${trip.name}】消費明細`;
+      document.getElementById('currentRateLabel').innerText = `匯率：${trip.rate || 0.22}`;
+      document.getElementById('btnExpenseLabel').innerText = `為【${trip.name}】記一筆消費`;
+
+      // 2. 切換旅程按鈕群
+      const tabs = document.getElementById('tripTabsContainer');
+      tabs.innerHTML = '';
+      trips.forEach(t => {
+        const btn = document.createElement('button');
+        const active = t.id === trip.id;
+        btn.className = `px-3.5 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition border ${
+          active ? 'bg-sky-500 text-white border-transparent shadow-xs' : 'bg-white text-slate-600 border-sky-100 hover:bg-sky-50'
+        }`;
+        btn.innerText = `${t.name} (${t.currency})`;
+        btn.onclick = () => { activeTripId = t.id; render(); };
+        tabs.appendChild(btn);
+      });
+
+      // 3. 數據指標計算
+      let total = 0, pre = 0, rewards = 0;
+      (trip.expenses || []).forEach(ex => {
+        const twd = toTWD(ex, trip);
+        total += twd;
+        if (ex.stage === 'pre') pre += twd;
+        const method = payMethods.find(m => m.id === ex.payMethodId);
+        if (method && method.isCard) {
+          rewards += Math.round(twd * ((method.rate - method.fee) / 100));
         }
       });
 
-      const [payMethods, setPayMethods] = useState(() => {
-        try {
-          const saved = localStorage.getItem('TRAVEL_APP_PAY_METHODS_V2');
-          return saved ? JSON.parse(saved) : DEFAULT_PAY_METHODS;
-        } catch (e) {
-          return DEFAULT_PAY_METHODS;
-        }
-      });
+      document.getElementById('statTotal').innerText = '$' + total.toLocaleString();
+      document.getElementById('statPre').innerText = '$' + pre.toLocaleString();
+      document.getElementById('statRewards').innerText = (rewards >= 0 ? '+$' : '-$') + Math.abs(rewards).toLocaleString();
 
-      const [activeTripId, setActiveTripId] = useState(trips[0]?.id || '');
-      const [isModalOpen, setIsModalOpen] = useState(false);
-      const [editingId, setEditingId] = useState(null);
-      const [isNewTripModalOpen, setIsNewTripModalOpen] = useState(false);
-      const [isNewPayMethodModalOpen, setIsNewPayMethodModalOpen] = useState(false);
-      const [isTripCatalogOpen, setIsTripCatalogOpen] = useState(false); // 旅程目錄開關
+      // 4. 消費明細清單渲染 (支援左滑刪除)
+      const list = document.getElementById('expenseList');
+      list.innerHTML = '';
 
-      const currentTrip = trips.find(t => t.id === activeTripId) || trips[0];
+      if (!trip.expenses || trip.expenses.length === 0) {
+        list.innerHTML = '<div class="text-center py-12 text-xs text-slate-400">目前尚無紀錄，點擊上方按鈕新增第一筆！</div>';
+      } else {
+        trip.expenses.forEach(ex => {
+          const itemTwd = toTWD(ex, trip);
+          const rowWrapper = document.createElement('div');
+          rowWrapper.className = 'relative overflow-hidden bg-rose-500 border-b border-sky-50 last:border-b-0';
 
-      useEffect(() => {
-        localStorage.setItem('TRAVEL_APP_TRIPS_V9', JSON.stringify(trips));
-      }, [trips]);
+          rowWrapper.innerHTML = `
+            <div class="absolute inset-y-0 right-0 w-20 flex items-center justify-center">
+              <button class="btnDeleteRow w-full h-full bg-rose-600 hover:bg-rose-700 text-white font-medium text-xs flex items-center justify-center">刪除</button>
+            </div>
+            <div class="swipe-item p-4 bg-white flex items-center justify-between select-none">
+              <div class="pr-2">
+                <div class="font-semibold text-slate-800 text-sm">${ex.title}</div>
+                <div class="text-xs text-slate-400 mt-0.5">${ex.date} • ${ex.category} • ${ex.stage === 'pre' ? '行前預購' : '當地支出'} • ${ex.payMethodName}</div>
+              </div>
+              <div class="flex items-center space-x-3 shrink-0">
+                <div class="text-right">
+                  <div class="font-bold text-slate-900 text-sm">$${itemTwd.toLocaleString()} TWD</div>
+                  ${ex.currency !== 'TWD' ? `<div class="text-xs text-slate-400">${ex.currency} ${ex.amount}</div>` : ''}
+                </div>
+                <button class="btnEditRow text-xs text-slate-400 hover:text-slate-600 px-2 py-1 rounded-lg hover:bg-slate-50 transition">編輯</button>
+              </div>
+            </div>
+          `;
 
-      useEffect(() => {
-        localStorage.setItem('TRAVEL_APP_PAY_METHODS_V2', JSON.stringify(payMethods));
-      }, [payMethods]);
+          // 左滑邏輯綁定
+          const swipeItem = rowWrapper.querySelector('.swipe-item');
+          let startX = 0, currentOffset = 0, isOpen = false;
 
-      const [formData, setFormData] = useState({
-        title: '',
-        category: '機票',
-        stage: 'pre',
-        currency: 'JPY',
-        origAmount: '',
-        date: new Date().toISOString().split('T')[0],
-        payMethodId: 'dbs-eco',
-        payer: '我'
-      });
+          swipeItem.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+          }, { passive: true });
 
-      const [newTripData, setNewTripData] = useState({
-        name: '',
-        currency: 'JPY',
-        rate: 0.22
-      });
-
-      const [newPayMethodData, setNewPayMethodData] = useState({
-        name: '',
-        rate: 0,
-        fee: 0,
-        isCard: false
-      });
-
-      const toTWD = (item, trip = currentTrip) => {
-        if (!item) return 0;
-        if (item.currency === 'TWD') return Number(item.origAmount || 0);
-        const rate = trip?.rate || 0.22;
-        return Math.round(Number(item.origAmount || 0) * rate);
-      };
-
-      const stats = useMemo(() => {
-        if (!currentTrip) return { total: 0, pre: 0, cardNet: 0 };
-        let total = 0, pre = 0, cardNet = 0;
-        (currentTrip.expenses || []).forEach(ex => {
-          const val = toTWD(ex);
-          total += val;
-          if (ex.stage === 'pre') pre += val;
-          const method = payMethods.find(m => m.id === ex.payMethodId);
-          if (method && method.isCard) {
-            cardNet += Math.round(val * ((method.rate - method.fee) / 100));
-          }
-        });
-        return { total, pre, cardNet };
-      }, [currentTrip, payMethods]);
-
-      const handleOpenAdd = () => {
-        setEditingId(null);
-        setFormData({
-          title: '',
-          category: '機票',
-          stage: 'pre',
-          currency: currentTrip ? currentTrip.currency : 'JPY',
-          origAmount: '',
-          date: new Date().toISOString().split('T')[0],
-          payMethodId: payMethods[0]?.id || 'dbs-eco',
-          payer: '我'
-        });
-        setIsModalOpen(true);
-      };
-
-      const handleOpenEdit = (expense) => {
-        setEditingId(expense.id);
-        setFormData({
-          title: expense.title,
-          category: expense.category,
-          stage: expense.stage,
-          currency: expense.currency,
-          origAmount: expense.origAmount.toString(),
-          date: expense.date,
-          payMethodId: expense.payMethodId || 'dbs-eco',
-          payer: expense.payer || '我'
-        });
-        setIsModalOpen(true);
-      };
-
-      const handleDeleteExpense = (id, title) => {
-        if (window.confirm(`確定要刪除「${title}」這筆紀錄嗎？`)) {
-          const updated = trips.map(t => {
-            if (t.id === currentTrip.id) {
-              return { ...t, expenses: t.expenses.filter(e => e.id !== id) };
+          swipeItem.addEventListener('touchmove', (e) => {
+            const diff = e.touches[0].clientX - startX;
+            if (isOpen) {
+              if (diff > 0 && diff <= 80) swipeItem.style.transform = `translateX(${-80 + diff}px)`;
+            } else {
+              if (diff < 0 && diff >= -90) swipeItem.style.transform = `translateX(${diff}px)`;
             }
-            return t;
-          });
-          setTrips(updated);
-        }
-      };
+          }, { passive: true });
 
-      const handleSave = (e) => {
-        e.preventDefault();
-        if (!formData.title || !formData.origAmount) return;
-
-        const currentMethod = payMethods.find(m => m.id === formData.payMethodId);
-
-        if (editingId) {
-          const updated = trips.map(t => {
-            if (t.id === currentTrip.id) {
-              const newExpenses = t.expenses.map(exp => {
-                if (exp.id === editingId) {
-                  return { 
-                    ...exp, 
-                    ...formData, 
-                    origAmount: parseFloat(formData.origAmount),
-                    payMethodName: currentMethod?.name || '星展 eco 永續卡'
-                  };
-                }
-                return exp;
-              });
-              return { ...t, expenses: newExpenses };
+          swipeItem.addEventListener('touchend', (e) => {
+            const matrix = new WebKitCSSMatrix(window.getComputedStyle(swipeItem).transform);
+            const x = matrix.m41;
+            if (x < -40) {
+              swipeItem.style.transform = 'translateX(-76px)';
+              isOpen = true;
+            } else {
+              swipeItem.style.transform = 'translateX(0px)';
+              isOpen = false;
             }
-            return t;
           });
-          setTrips(updated);
-        } else {
-          const newEntry = {
-            id: 'exp-' + Date.now(),
-            ...formData,
-            origAmount: parseFloat(formData.origAmount),
-            payMethodName: currentMethod?.name || '星展 eco 永續卡'
+
+          // 刪除按鈕
+          rowWrapper.querySelector('.btnDeleteRow').onclick = () => {
+            if (confirm(`確定要刪除「${ex.title}」這筆紀錄嗎？`)) {
+              trip.expenses = trip.expenses.filter(i => i.id !== ex.id);
+              saveState();
+            }
           };
-          const updated = trips.map(t => {
-            if (t.id === currentTrip.id) {
-              return { ...t, expenses: [newEntry, ...(t.expenses || [])] };
-            }
-            return t;
-          });
-          setTrips(updated);
-        }
 
-        setIsModalOpen(false);
-      };
+          // 編輯按鈕
+          rowWrapper.querySelector('.btnEditRow').onclick = (e) => {
+            e.stopPropagation();
+            openEditExpense(ex);
+          };
 
-      const handleCreateTrip = (e) => {
-        e.preventDefault();
-        if (!newTripData.name) return;
+          list.appendChild(rowWrapper);
+        });
+      }
 
-        const newTrip = {
-          id: 'trip-' + Date.now(),
-          name: newTripData.name,
-          currency: newTripData.currency || 'JPY',
-          rate: parseFloat(newTripData.rate) || 0.22,
-          expenses: []
+      // 5. 旅程目錄內容更新
+      const catalog = document.getElementById('catalogList');
+      catalog.innerHTML = '';
+      trips.forEach(t => {
+        const isCurrent = t.id === trip.id;
+        const sumTWD = (t.expenses || []).reduce((s, item) => s + toTWD(item, t), 0);
+        const card = document.createElement('div');
+        card.className = `p-4 rounded-2xl border cursor-pointer transition flex items-center justify-between ${
+          isCurrent ? 'bg-sky-50/70 border-sky-400 ring-1 ring-sky-300' : 'bg-white border-sky-100 hover:bg-sky-50/40'
+        }`;
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="font-bold text-slate-800 text-sm">${t.name}</span>
+              ${isCurrent ? '<span class="px-2 py-0.5 rounded-full text-[10px] bg-sky-500 text-white font-medium">目前選取</span>' : ''}
+            </div>
+            <div class="text-slate-400 text-[11px] mt-1">幣別：${t.currency} • 匯率：${t.rate} • 共 ${(t.expenses || []).length} 筆消費</div>
+          </div>
+          <div class="text-right">
+            <div class="font-bold text-slate-900 text-sm">$${sumTWD.toLocaleString()} <span class="text-[10px] text-slate-400 font-normal">TWD</span></div>
+            <span class="text-[11px] text-sky-600 font-medium">點擊查看 ➜</span>
+          </div>
+        `;
+        card.onclick = () => {
+          activeTripId = t.id;
+          closeModal('modalCatalog');
+          render();
         };
+        catalog.appendChild(card);
+      });
+    }
 
-        setTrips([...trips, newTrip]);
-        setActiveTripId(newTrip.id);
-        setIsNewTripModalOpen(false);
-        setNewTripData({ name: '', currency: 'JPY', rate: 0.22 });
+    // --- 表單填寫與儲存 ---
+    function populatePaySelect(selectedId) {
+      const select = document.getElementById('expPayMethod');
+      select.innerHTML = '';
+      payMethods.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.id;
+        opt.innerText = m.name;
+        if (m.id === selectedId) opt.selected = true;
+        select.appendChild(opt);
+      });
+      const addOpt = document.createElement('option');
+      addOpt.value = '__add_new__';
+      addOpt.innerText = '＋ 新增支付方式...';
+      select.appendChild(addOpt);
+    }
+
+    function populateCurrencySelect(selectedCur) {
+      const trip = getCurrentTrip();
+      const select = document.getElementById('expCurrency');
+      select.innerHTML = `
+        <option value="${trip.currency}">${trip.currency} 當地外幣</option>
+        <option value="TWD">TWD 台幣</option>
+      `;
+      if (selectedCur) select.value = selectedCur;
+    }
+
+    function openAddExpense() {
+      const trip = getCurrentTrip();
+      document.getElementById('modalExpenseTitle').innerText = '記一筆消費';
+      document.getElementById('expEditingId').value = '';
+      document.getElementById('expTitle').value = '';
+      document.getElementById('expStage').value = 'pre';
+      document.getElementById('expCategory').value = '機票';
+      document.getElementById('expAmount').value = '';
+      document.getElementById('expDate').value = new Date().toISOString().split('T')[0];
+      populateCurrencySelect(trip.currency);
+      populatePaySelect(payMethods[0]?.id || 'dbs-eco');
+      openModal('modalExpense');
+    }
+
+    function openEditExpense(ex) {
+      document.getElementById('modalExpenseTitle').innerText = '修改消費紀錄';
+      document.getElementById('expEditingId').value = ex.id;
+      document.getElementById('expTitle').value = ex.title;
+      document.getElementById('expStage').value = ex.stage;
+      document.getElementById('expCategory').value = ex.category;
+      document.getElementById('expAmount').value = ex.amount;
+      document.getElementById('expDate').value = ex.date;
+      populateCurrencySelect(ex.currency);
+      populatePaySelect(ex.payMethodId);
+      openModal('modalExpense');
+    }
+
+    // --- 事件監聽 ---
+    document.getElementById('btnOpenAddExpense').onclick = openAddExpense;
+    document.getElementById('btnOpenNewTrip').onclick = () => openModal('modalNewTrip');
+    document.getElementById('btnOpenCatalog').onclick = () => openModal('modalCatalog');
+    document.getElementById('btnCatalogCreate').onclick = () => {
+      closeModal('modalCatalog');
+      openModal('modalNewTrip');
+    };
+
+    document.getElementById('expPayMethod').onchange = (e) => {
+      if (e.target.value === '__add_new__') {
+        openModal('modalNewPay');
+      }
+    };
+
+    document.getElementById('newPayIsCard').onchange = (e) => {
+      document.getElementById('cardFields').classList.toggle('hidden', !e.target.checked);
+    };
+
+    // 儲存消費
+    document.getElementById('formExpense').onsubmit = (e) => {
+      e.preventDefault();
+      const trip = getCurrentTrip();
+      const editingId = document.getElementById('expEditingId').value;
+      const payId = document.getElementById('expPayMethod').value;
+      const payObj = payMethods.find(m => m.id === payId);
+
+      const entry = {
+        id: editingId || ('exp-' + Date.now()),
+        title: document.getElementById('expTitle').value,
+        stage: document.getElementById('expStage').value,
+        category: document.getElementById('expCategory').value,
+        currency: document.getElementById('expCurrency').value,
+        amount: parseFloat(document.getElementById('expAmount').value) || 0,
+        date: document.getElementById('expDate').value,
+        payMethodId: payId,
+        payMethodName: payObj ? payObj.name : '星展 eco 永續卡'
       };
 
-      const handleCreatePayMethod = (e) => {
-        e.preventDefault();
-        if (!newPayMethodData.name) return;
+      if (editingId) {
+        trip.expenses = trip.expenses.map(i => i.id === editingId ? entry : i);
+      } else {
+        trip.expenses = [entry, ...(trip.expenses || [])];
+      }
 
-        const newMethod = {
-          id: 'pay-' + Date.now(),
-          name: newPayMethodData.name,
-          rate: parseFloat(newPayMethodData.rate) || 0,
-          fee: parseFloat(newPayMethodData.fee) || 0,
-          isCard: newPayMethodData.isCard
-        };
+      closeModal('modalExpense');
+      saveState();
+    };
 
-        const updated = [...payMethods, newMethod];
-        setPayMethods(updated);
-        setFormData(prev => ({ ...prev, payMethodId: newMethod.id }));
-        setIsNewPayMethodModalOpen(false);
-        setNewPayMethodData({ name: '', rate: 0, fee: 0, isCard: false });
+    // 建立新旅程
+    document.getElementById('formNewTrip').onsubmit = (e) => {
+      e.preventDefault();
+      const newTrip = {
+        id: 'trip-' + Date.now(),
+        name: document.getElementById('newTripName').value,
+        currency: document.getElementById('newTripCurrency').value.toUpperCase(),
+        rate: parseFloat(document.getElementById('newTripRate').value) || 0.22,
+        expenses: []
       };
+      trips.push(newTrip);
+      activeTripId = newTrip.id;
+      document.getElementById('formNewTrip').reset();
+      closeModal('modalNewTrip');
+      saveState();
+    };
 
-      return (
-        <div className="max-w-3xl mx-auto px-4 py-6">
-          {/* 頂部導航列：右上角只留「＋ 新旅程」與「目錄」按鈕 */}
-          <div className="bg-white/95 p-4 rounded-3xl border border-sky-100 shadow-sm flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-3">
-              <img 
-                src={APP_ICON_URL} 
-                alt="Logo" 
-                className="w-12 h-12 rounded-2xl object-cover shadow-sm border border-amber-200"
-              />
-              <div>
-                <h1 className="text-xl font-bold text-slate-900 tracking-tight">旅遊記帳</h1>
-                <p className="text-xs text-sky-600 font-medium">星展信用卡回饋 • 預付機酒歸戶</p>
-              </div>
-            </div>
+    // 新增支付方式
+    document.getElementById('formNewPay').onsubmit = (e) => {
+      e.preventDefault();
+      const isCard = document.getElementById('newPayIsCard').checked;
+      const newMethod = {
+        id: 'pay-' + Date.now(),
+        name: document.getElementById('newPayName').value,
+        isCard: isCard,
+        rate: isCard ? (parseFloat(document.getElementById('newPayRate').value) || 0) : 0,
+        fee: isCard ? (parseFloat(document.getElementById('newPayFee').value) || 0) : 0
+      };
+      payMethods.push(newMethod);
+      document.getElementById('formNewPay').reset();
+      document.getElementById('cardFields').classList.add('hidden');
+      closeModal('modalNewPay');
+      populatePaySelect(newMethod.id);
+      saveState();
+    };
 
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setIsTripCatalogOpen(true)}
-                className="px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-2xl text-xs font-semibold transition flex items-center space-x-1"
-                title="查看過往與所有旅程目錄"
-              >
-                <span>☰ 目錄</span>
-              </button>
-              <button
-                onClick={() => setIsNewTripModalOpen(true)}
-                className="px-3.5 py-2 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-2xl text-xs font-semibold transition"
-              >
-                ＋ 新旅程
-              </button>
-            </div>
-          </div>
-
-          {/* 橫向切換旅程列 */}
-          <div className="flex items-center space-x-2 overflow-x-auto scrollbar-none pb-2 mb-3">
-            <span className="text-xs text-slate-400 font-medium whitespace-nowrap pl-1">切換旅程：</span>
-            {trips.map(trip => {
-              const active = trip.id === currentTrip?.id;
-              return (
-                <button
-                  key={trip.id}
-                  onClick={() => setActiveTripId(trip.id)}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition border ${
-                    active 
-                      ? 'bg-sky-500 text-white border-transparent shadow-xs' 
-                      : 'bg-white text-slate-600 border-sky-100 hover:bg-sky-50'
-                  }`}
-                >
-                  {trip.name} ({trip.currency})
-                </button>
-              );
-            })}
-          </div>
-
-          {/* 切換旅程下一行：【＋ 記一筆】顯眼大按鈕 */}
-          <div className="mb-6">
-            <button
-              onClick={handleOpenAdd}
-              className="w-full py-3 bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white rounded-2xl text-sm font-semibold shadow-md shadow-sky-200/60 transition flex items-center justify-center space-x-2 active:scale-[0.99]"
-            >
-              <span className="text-base leading-none">＋</span>
-              <span>為【{currentTrip?.name}】記一筆消費</span>
-            </button>
-          </div>
-
-          {/* 總結指標卡 */}
-          <div className="grid grid-cols-3 gap-3 mb-6">
-            <div className="bg-white p-4 rounded-2xl border border-sky-100 shadow-xs">
-              <div className="text-xs text-slate-400 font-medium">旅程總支出</div>
-              <div className="text-xl font-bold text-slate-800 mt-1">${stats.total.toLocaleString()} <span className="text-xs font-normal text-slate-400">TWD</span></div>
-            </div>
-            <div className="bg-white p-4 rounded-2xl border border-sky-100 shadow-xs">
-              <div className="text-xs text-blue-600 font-medium">提前預購 (機酒)</div>
-              <div className="text-xl font-bold text-blue-900 mt-1">${stats.pre.toLocaleString()} <span className="text-xs font-normal text-slate-400">TWD</span></div>
-            </div>
-            <div className="bg-white p-4 rounded-2xl border border-emerald-100 shadow-xs">
-              <div className="text-xs text-emerald-600 font-medium">星展回饋淨賺</div>
-              <div className="text-xl font-bold text-emerald-700 mt-1">+${stats.cardNet.toLocaleString()} <span className="text-xs font-normal text-slate-400">TWD</span></div>
-            </div>
-          </div>
-
-          {/* 消費明細 */}
-          <div className="bg-white rounded-3xl border border-sky-100 p-5 shadow-xs">
-            <div className="flex justify-between items-center mb-3">
-              <div>
-                <h2 className="text-sm font-bold text-slate-800">
-                  【{currentTrip?.name}】消費明細
-                </h2>
-                <span className="text-[11px] text-slate-400">（左滑項目可刪除）</span>
-              </div>
-              <span className="text-xs text-slate-400">匯率：{currentTrip?.rate || 0.22}</span>
-            </div>
-
-            {(!currentTrip?.expenses || currentTrip.expenses.length === 0) ? (
-              <div className="text-center py-12 text-xs text-slate-400">
-                目前尚無紀錄，點擊上方「＋ 為此旅程記一筆」新增機票或消費！
-              </div>
-            ) : (
-              <div className="rounded-2xl overflow-hidden border border-sky-100 divide-y divide-sky-50">
-                {currentTrip.expenses.map(ex => (
-                  <ExpenseItem
-                    key={ex.id}
-                    ex={ex}
-                    toTWD={toTWD}
-                    onEdit={handleOpenEdit}
-                    onDelete={handleDeleteExpense}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* 彈窗 1：新增 / 修改消費 */}
-          {isModalOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-              <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-sky-100 text-xs">
-                <div className="flex justify-between items-center pb-3 border-b border-sky-100">
-                  <h3 className="font-bold text-base text-slate-900">
-                    {editingId ? '修改消費紀錄' : '記一筆消費'}
-                  </h3>
-                  <button onClick={() => setIsModalOpen(false)} className="text-slate-400 text-sm">✕</button>
-                </div>
-
-                <form onSubmit={handleSave} className="mt-4 space-y-3">
-                  <div>
-                    <label className="block text-slate-600 mb-1 font-semibold">品項名稱</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="例：酷航機票、新宿飯店"
-                      value={formData.title}
-                      onChange={e => setFormData({ ...formData, title: e.target.value })}
-                      className="w-full bg-slate-50 border border-sky-100 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:border-sky-500"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-slate-600 mb-1 font-semibold">階段</label>
-                      <select
-                        value={formData.stage}
-                        onChange={e => setFormData({ ...formData, stage: e.target.value })}
-                        className="w-full bg-slate-50 border border-sky-100 rounded-xl px-2 py-2"
-                      >
-                        <option value="pre">行前預付</option>
-                        <option value="local">當地開銷</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-slate-600 mb-1 font-semibold">類別</label>
-                      <select
-                        value={formData.category}
-                        onChange={e => setFormData({ ...formData, category: e.target.value })}
-                        className="w-full bg-slate-50 border border-sky-100 rounded-xl px-2 py-2"
-                      >
-                        <option value="機票">機票</option>
-                        <option value="住宿">住宿</option>
-                        <option value="食">食</option>
-                        <option value="交通">交通</option>
-                        <option value="娛樂">娛樂</option>
-                        <option value="衣服">衣服</option>
-                        <option value="其他">其他</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-slate-600 mb-1 font-semibold">幣別</label>
-                      <select
-                        value={formData.currency}
-                        onChange={e => setFormData({ ...formData, currency: e.target.value })}
-                        className="w-full bg-slate-50 border border-sky-100 rounded-xl px-2 py-2"
-                      >
-                        <option value={currentTrip?.currency || 'JPY'}>{currentTrip?.currency || 'JPY'} 當地外幣</option>
-                        <option value="TWD">TWD 台幣</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-slate-600 mb-1 font-semibold">金額</label>
-                      <input
-                        type="number"
-                        required
-                        placeholder="0"
-                        value={formData.origAmount}
-                        onChange={e => setFormData({ ...formData, origAmount: e.target.value })}
-                        className="w-full bg-slate-50 border border-sky-100 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:border-sky-500"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-slate-600 mb-1 font-semibold">日期</label>
-                    <input
-                      type="date"
-                      required
-                      value={formData.date}
-                      onChange={e => setFormData({ ...formData, date: e.target.value })}
-                      className="w-full bg-slate-50 border border-sky-100 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:border-sky-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-slate-600 mb-1 font-semibold">支付方式</label>
-                    <select
-                      value={formData.payMethodId}
-                      onChange={e => {
-                        if (e.target.value === '__add_new__') {
-                          setIsNewPayMethodModalOpen(true);
-                        } else {
-                          setFormData({ ...formData, payMethodId: e.target.value });
-                        }
-                      }}
-                      className="w-full bg-slate-50 border border-sky-100 rounded-xl px-2 py-2 text-slate-800 font-medium"
-                    >
-                      {payMethods.map(m => (
-                        <option key={m.id} value={m.id}>{m.name}</option>
-                      ))}
-                      <option value="__add_new__" className="text-sky-600 font-semibold">＋ 新增支付方式...</option>
-                    </select>
-                  </div>
-
-                  <div className="pt-3 flex justify-end space-x-2">
-                    <button
-                      type="button"
-                      onClick={() => setIsModalOpen(false)}
-                      className="px-4 py-2 text-slate-400 font-medium"
-                    >
-                      取消
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-5 py-2 bg-gradient-to-r from-sky-500 to-blue-600 text-white rounded-xl font-semibold shadow-sm"
-                    >
-                      {editingId ? '確認更新' : '儲存'}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
-
-          {/* 彈窗 2：新增新旅程 */}
-          {isNewTripModalOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-              <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-sky-100 text-xs">
-                <div className="flex justify-between items-center pb-3 border-b border-sky-100">
-                  <h3 className="font-bold text-base text-slate-900">規劃新旅程</h3>
-                  <button onClick={() => setIsNewTripModalOpen(false)} className="text-slate-400 text-sm">✕</button>
-                </div>
-
-                <form onSubmit={handleCreateTrip} className="mt-4 space-y-3">
-                  <div>
-                    <label className="block text-slate-600 mb-1 font-semibold">旅程名稱</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="例：2026/12 泰國曼谷"
-                      value={newTripData.name}
-                      onChange={e => setNewTripData({ ...newTripData, name: e.target.value })}
-                      className="w-full bg-slate-50 border border-sky-100 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:border-sky-500"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-slate-600 mb-1 font-semibold">外幣代碼</label>
-                      <input
-                        type="text"
-                        placeholder="THB, JPY, EUR..."
-                        value={newTripData.currency}
-                        onChange={e => setNewTripData({ ...newTripData, currency: e.target.value.toUpperCase() })}
-                        className="w-full bg-slate-50 border border-sky-100 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:border-sky-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-600 mb-1 font-semibold">預估匯率</label>
-                      <input
-                        type="number"
-                        step="0.0001"
-                        placeholder="0.95"
-                        value={newTripData.rate}
-                        onChange={e => setNewTripData({ ...newTripData, rate: e.target.value })}
-                        className="w-full bg-slate-50 border border-sky-100 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:border-sky-500"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="pt-3 flex justify-end space-x-2">
-                    <button
-                      type="button"
-                      onClick={() => setIsNewTripModalOpen(false)}
-                      className="px-4 py-2 text-slate-400"
-                    >
-                      取消
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-5 py-2 bg-gradient-to-r from-sky-500 to-blue-600 text-white rounded-xl font-semibold"
-                    >
-                      建立
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
-
-          {/* 彈窗 3：新增支付方式 */}
-          {isNewPayMethodModalOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-              <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-sky-100 text-xs">
-                <div className="flex justify-between items-center pb-3 border-b border-sky-100">
-                  <h3 className="font-bold text-base text-slate-900">新增支付方式</h3>
-                  <button onClick={() => setIsNewPayMethodModalOpen(false)} className="text-slate-400 text-sm">✕</button>
-                </div>
-
-                <form onSubmit={handleCreatePayMethod} className="mt-4 space-y-3">
-                  <div>
-                    <label className="block text-slate-600 mb-1 font-semibold">支付方式名稱</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="例：LINE Pay、街口支付、玉山熊本熊卡"
-                      value={newPayMethodData.name}
-                      onChange={e => setNewPayMethodData({ ...newPayMethodData, name: e.target.value })}
-                      className="w-full bg-slate-50 border border-sky-100 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:border-sky-500"
-                    />
-                  </div>
-
-                  <div className="flex items-center space-x-2 pt-1">
-                    <input
-                      type="checkbox"
-                      id="isCardCheck"
-                      checked={newPayMethodData.isCard}
-                      onChange={e => setNewPayMethodData({ ...newPayMethodData, isCard: e.target.checked })}
-                      className="rounded border-sky-200 text-sky-600"
-                    />
-                    <label htmlFor="isCardCheck" className="text-slate-700 font-medium cursor-pointer">
-                      此為信用卡（需計算海外手續費與回饋）
-                    </label>
-                  </div>
-
-                  {newPayMethodData.isCard && (
-                    <div className="grid grid-cols-2 gap-2 pt-1">
-                      <div>
-                        <label className="block text-slate-600 mb-1 font-semibold">海外回饋率 (%)</label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          placeholder="3.0"
-                          value={newPayMethodData.rate}
-                          onChange={e => setNewPayMethodData({ ...newPayMethodData, rate: e.target.value })}
-                          className="w-full bg-slate-50 border border-sky-100 rounded-xl px-3 py-2"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-slate-600 mb-1 font-semibold">海外手續費 (%)</label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          placeholder="1.5"
-                          value={newPayMethodData.fee}
-                          onChange={e => setNewPayMethodData({ ...newPayMethodData, fee: e.target.value })}
-                          className="w-full bg-slate-50 border border-sky-100 rounded-xl px-3 py-2"
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="pt-3 flex justify-end space-x-2">
-                    <button
-                      type="button"
-                      onClick={() => setIsNewPayMethodModalOpen(false)}
-                      className="px-4 py-2 text-slate-400"
-                    >
-                      取消
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-5 py-2 bg-gradient-to-r from-sky-500 to-blue-600 text-white rounded-xl font-semibold"
-                    >
-                      儲存新增
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
-
-          {/* 彈窗 4：旅程總目錄（查看所有目前與過往旅程紀錄） */}
-          {isTripCatalogOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-              <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-sky-100 text-xs max-h-[85vh] flex flex-col">
-                <div className="flex justify-between items-center pb-3 border-b border-sky-100">
-                  <div>
-                    <h3 className="font-bold text-base text-slate-900">旅程總目錄</h3>
-                    <p className="text-[11px] text-slate-400">點擊任一旅程卡片即可切換並查看紀錄</p>
-                  </div>
-                  <button onClick={() => setIsTripCatalogOpen(false)} className="text-slate-400 text-sm">✕</
+    // 初始化啟動
+    render();
+  </script>
+</body>
+</html>
